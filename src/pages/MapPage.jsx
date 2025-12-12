@@ -13,6 +13,9 @@ export default function MapPage() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(false);
 
+  // ⭐ NEW: track if map side panel is open
+  const [panelOpen, setPanelOpen] = useState(false);
+
   function refreshMap() {
     setRefreshTrigger((prev) => !prev);
   }
@@ -98,28 +101,33 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* PROFILE MENU */}
-      <ProfileMenu profile={profile} />
+      {/* PROFILE MENU — HIDDEN WHEN PANEL OPEN */}
+      {!panelOpen && <ProfileMenu profile={profile} />}
 
-      {/* MAP — ALWAYS RENDERS FOR LOGGED-IN USERS */}
-      <MapView refreshTrigger={refreshTrigger} profile={profile} />
+      {/* MAP */}
+      <MapView
+        refreshTrigger={refreshTrigger}
+        onPanelToggle={setPanelOpen}   // ⭐ THIS IS THE KEY
+      />
 
-      {/* ➕ ADD PLACE (users + approved orgs) */}
-      <button
-        onClick={() => {
-          if (profile.role === "pending_org") {
-            alert("Your organization is awaiting admin approval.");
-            return;
-          }
-          setShowPlaceModal(true);
-        }}
-        className="absolute bottom-6 right-6 bg-green-600 text-white px-5 py-3 rounded-full shadow-lg font-bold z-[9999]"
-      >
-        + Add Place
-      </button>
+      {/* ➕ ADD PLACE */}
+      {!panelOpen && (
+        <button
+          onClick={() => {
+            if (profile.role === "pending_org") {
+              alert("Your organization is awaiting admin approval.");
+              return;
+            }
+            setShowPlaceModal(true);
+          }}
+          className="absolute bottom-6 right-6 bg-green-600 text-white px-5 py-3 rounded-full shadow-lg font-bold z-[9999]"
+        >
+          + Add Place
+        </button>
+      )}
 
-      {/* ➕ ADD EVENT (approved orgs only) */}
-      {profile.role === "approved_org" && (
+      {/* ➕ ADD EVENT */}
+      {!panelOpen && profile.role === "approved_org" && (
         <button
           onClick={() => setShowEventModal(true)}
           className="absolute bottom-24 right-6 bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg font-bold z-[9999]"
@@ -133,7 +141,6 @@ export default function MapPage() {
         <AddPlaceModal
           onClose={() => setShowPlaceModal(false)}
           onAdded={refreshMap}
-          profile={profile}
         />
       )}
 
